@@ -1,0 +1,38 @@
+# Core
+torch>=2.0.0
+torchvision>=0.15.0
+pytorch-lightning>=2.0.0
+torchmetrics>=1.0.0
+
+# Transformers
+transformers>=4.30.0
+tokenizers>=0.13.0
+huggingface-hub>=0.16.0
+
+# CNN Backbone
+timm>=0.9.0
+
+# Data
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+scipy>=1.11.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# Utils
+tqdm>=4.65.0
+pyyaml>=6.0
+loguru>=0.7.0
+rich>=13.0.0
+
+# For TCGA data
+gdc-client>=2.0.0  # GDC download tool
+biopython>=1.81    # Sequence handling
+pillow>=9.5.0      # Image processing
+
+# For experiments
+mlflow>=2.0.0
+tensorboard>=2.13.0

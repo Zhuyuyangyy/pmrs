@@ -1,0 +1,77 @@
+# PMRS Multi-Modal Precision Medicine Recommendation System
+# Configuration File
+
+model:
+  # Gene encoder
+  n_genes: 20000           # Number of genes in expression matrix
+  n_pathways: 50           # Number of pathway gene sets
+  
+  # Architecture
+  d_model: 768             # Hidden dimension
+  fusion_type: "cross_attention"  # cross_attention | concat | gated | attention
+  use_pathology: true      # Enable pathology image encoder
+  use_text: true           # Enable clinical text encoder
+  use_pathways: true       # Enable pathway aggregation
+  
+  # Task outputs
+  n_treatments: 10         # Number of treatment options
+  n_survival_years: 5      # Survival prediction horizon (years)
+  dropout: 0.2
+
+training:
+  batch_size: 16           # Per-GPU batch size (2 GPUs × 16 = 32 effective)
+  num_epochs: 50
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  
+  # Scheduler
+  warmup_epochs: 5         # Linear warmup
+  scheduler_type: "cosine"  # cosine | step | exponential
+  
+  # Loss weights
+  lambda_risk: 1.0         # Risk prediction weight
+  lambda_treatment: 0.5   # Treatment recommendation weight
+  lambda_survival: 0.3    # Survival prediction weight
+  
+  # Training tricks
+  gradient_clip_val: 1.0
+  use_mixed_precision: true  # FP16 training
+  use_gradient_checkpointing: true
+  accumulate_grad_batches: 2  # Effective batch size = 32
+  
+  # Early stopping
+  early_stopping_patience: 10
+  early_stopping_metric: "val_loss"
+
+data:
+  # TCGA Data
+  data_dir: "data/tcga"
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  n_samples_synthetic: 1000  # For development (set to 10000+ for real experiments)
+  
+  # Data augmentation
+  augment_gene: false       # Add noise to gene expression
+  augment_text: false       # Back-translation for text
+  
+  # TCGA cancer types (empty = all)
+  cancer_types: []
+
+text_encoder:
+  model_name: "dmis-lab/biobert-base-cased-v1.2"  # BioBERT
+  # Alternatives: "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"
+  pooling: "cls"           # cls | mean | attention
+  freeze_layers: 0         # 0 = finetune all
+
+output:
+  output_dir: "outputs"
+  experiment_name: "pmrs_experiment_20260430"
+  save_best_only: true
+  log_every_n_steps: 10
+
+# Inference
+inference:
+  batch_size: 32
+  use_amp: true             # Automatic mixed precision
+  ensemble: false           # Ensemble multiple checkpoints
