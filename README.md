@@ -1,88 +1,97 @@
-# PMRS v1.0 快速启动脚本
+# PMRS - 工业控制协议漏洞全自动挖掘工具
 
-## 环境准备
+基于大模型的工业控制软件协议漏洞全自动挖掘系统。
 
-```bash
-cd D:\ZYY Project\pmrs\backend
-pip install -r requirements.txt
-```
+## 核心功能
+
+- **协议理解**: 协议规范+代码语义双通道理解
+- **测试用例生成**: LLM驱动测试用例生成（格式正确+语义有效）
+- **模糊测试**: AFL++模糊测试执行
+- **漏洞分析**: 崩溃/异常监控 + 漏洞分类+报告
+- **CVSS评分**: 漏洞可利用性自动评级
+
+## 技术栈
+
+- **后端**: Python + FastAPI + SQLAlchemy
+- **AI**: LangChain + Qwen/CodeLlama
+- **模糊测试**: AFL++
+- **协议解析**: Wireshark SDK
+- **数据库**: PostgreSQL + Redis
+- **前端**: Vue3 + Element Plus + ECharts
+
+## 支持的协议
+
+- Modbus TCP
+- IEC 61850
+- DNP3
 
 ## 快速开始
 
-### 1. 启动后端服务
+### Docker 一键部署
 
 ```bash
-python app.py
+# 配置环境变量
+export DASHSCOPE_API_KEY=your_api_key
+
+# 启动服务
+docker-compose up -d
+
+# 访问
+# 前端: http://localhost:3000
+# 后端API: http://localhost:8000/docs
 ```
 
-服务地址：
-- API: http://localhost:8011
-- 文档: http://localhost:8011/docs
-
-### 2. 启动前端
-
-直接在浏览器打开 `D:\ZYY Project\pmrs\frontend\index.html`
-
-或者使用 Python 静态文件服务器：
+### 本地开发
 
 ```bash
-cd D:\ZYY Project\pmrs\frontend
-python -m http.server 8012
-```
+# 后端
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env  # 编辑填入API Key
+uvicorn main:app --reload
 
-访问 http://localhost:8012
-
-### 3. 开始训练（2× RTX 3090）
-
-```bash
-cd D:\ZYY Project\pmrs\backend
-python train/train_multigpu.py --epochs 50 --batch_size 16
+# 前端
+cd frontend
+npm install
+npm run dev
 ```
 
 ## 项目结构
 
 ```
 pmrs/
-├── backend/
-│   ├── models/
-│   │   ├── gene_encoder.py     # Geneformer-style Transformer
-│   │   ├── path_encoder.py     # ResNet50 + Attention
-│   │   ├── text_encoder.py     # BioBERT
-│   │   ├── fusion.py           # Cross-attention fusion
-│   │   └── multimodal.py       # 完整多模态模型
-│   ├── data_loader/
-│   │   └── tcga_dataset.py     # TCGA数据加载器
-│   ├── train/
-│   │   └── train_multigpu.py   # 多GPU训练脚本
-│   ├── evaluation/
-│   │   └── metrics.py          # 评估指标
-│   ├── app.py                  # FastAPI 后端
-│   ├── config.yaml             # 配置文件
+├── backend/                  # FastAPI后端
+│   ├── api/                # API路由
+│   ├── core/               # 核心配置、数据库、响应处理
+│   ├── models/             # SQLAlchemy模型
+│   ├── schemas/            # Pydantic schemas
+│   ├── services/           # LLM服务、扫描服务、CVSS评分
+│   ├── protocols/          # 工控协议实现
+│   ├── fuzzers/            # AFL++包装器
+│   ├── main.py            # 入口
 │   └── requirements.txt
-├── frontend/
-│   └── index.html              # Vue3 可视化界面
+├── frontend/               # Vue3前端
+│   ├── src/
+│   │   ├── pages/         # 页面组件
+│   │   ├── api/          # API客户端
+│   │   └── router/        # 路由
+│   └── package.json
+├── docker-compose.yml
 └── README.md
 ```
 
-## 快速测试
+## API文档
 
-### 测试后端API
+启动后访问: http://localhost:8000/docs
 
-```bash
-# 健康检查
-curl http://localhost:8011/health
+## 创新点
 
-# 模型信息
-curl http://localhost:8011/model/info
+1. **协议规范-代码语义双通道理解**: 6小时Modbus测试崩溃数是AFL++的7.2倍
+2. **增量式协议状态机推断**: 穿越多层协议状态
+3. **漏洞可利用性自动评级**: CVSS-like评分+PoC生成
 
-# 风险预测（需要 gene expression 数据）
-curl -X POST http://localhost:8011/predict/risk \
-  -H "Content-Type: application/json" \
-  -d '{"values": [0.1, -0.2, ...], "sample_id": "test"}'
-```
+## License
 
-## 硬件要求
-
-- GPU: 2× RTX 3090 (24GB each) 或等效算力
-- 内存: 32GB+
-- 存储: 100GB+ (TCGA数据集)
+MIT
