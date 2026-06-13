@@ -11,7 +11,8 @@ from schemas.schemas import ProtocolAnalysisRequest, ProtocolAnalysisResponse
 from services.llm_service import llm_service
 from protocols.base import ProtocolRegistry
 from protocols.modbus_tcp import ModbusTCP
-from protocols.iec61850 import IEC61850, DNP3
+from protocols.iec61850 import IEC61850Protocol
+from protocols.dnp3 import DNP3Protocol
 
 router = APIRouter()
 

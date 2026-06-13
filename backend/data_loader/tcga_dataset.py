@@ -5,6 +5,7 @@ Supports: Gene expression (RNA-seq), Clinical data, Slide images (TCGA-WIKI)
 import os
 import json
 import torch
+import torch.nn.functional as F
 import pandas as pd
 import numpy as np
 from torch.utils.data import Dataset, DataLoader

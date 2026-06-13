@@ -21,6 +21,8 @@ services:
     restart: unless-stopped
     networks:
       - pmrs-network
+    profiles:
+      - production
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Database
@@ -77,25 +79,25 @@ services:
       dockerfile: Dockerfile
     container_name: pmrs-backend
     environment:
-      # 应用配置
-      PROJECT_NAME: PMRS - 工业控制协议漏洞挖掘系统
+      # Application
+      PROJECT_NAME: PMRS - Industrial Control Protocol Vulnerability Mining System
       VERSION: 1.0.0
       ENVIRONMENT: ${ENVIRONMENT:-production}
       DEBUG: "false"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       API_PREFIX: /api/v1
 
-      # 数据库配置
+      # Database
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/pmrs
       DB_POOL_SIZE: 20
       DB_POOL_OVERFLOW: 10
       DB_POOL_TIMEOUT: 30
       DB_ECHO: "false"
 
-      # Redis配置
+      # Redis
       REDIS_URL: redis://redis:6379/0
 
-      # 安全配置
+      # Security
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
@@ -103,27 +105,26 @@ services:
       # CORS
       CORS_ORIGINS: '["http://localhost","http://localhost:3000","http://localhost:8080"]'
 
-      # 限流
+      # Rate Limiting
       RATE_LIMIT_MAX_REQUESTS: 100
       RATE_LIMIT_WINDOW_SECONDS: 60
 
-      # LLM配置
+      # LLM
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
 
-      # AFL配置
+      # AFL
       AFL_PATH: /usr/local/bin
       AFL_INPUT_DIR: /tmp/afl_input
       AFL_OUTPUT_DIR: /tmp/afl_output
 
-      # Gunicorn配置
+      # Gunicorn
       GUNICORN_WORKERS: ${GUNICORN_WORKERS:-4}
       GUNICORN_TIMEOUT: 120
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
-      - ./backend:/app
       - afl_input:/tmp/afl_input
       - afl_output:/tmp/afl_output
       - backend_logs:/app/logs
@@ -154,7 +155,6 @@ services:
       VITE_API_BASE_URL: /api/v1
       NODE_ENV: production
     volumes:
-      - ./frontend:/app
       - /app/node_modules
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
@@ -167,6 +167,58 @@ services:
     restart: unless-stopped
     networks:
       - pmrs-network
+
+  # ---------------------------------------------------------------------------
+  # Prometheus Monitoring (optional - enable with profile)
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: pmrs-prometheus
+    volumes:
+      - ./scripts/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - pmrs-network
+    profiles:
+      - monitoring
+
+  # ---------------------------------------------------------------------------
+  # Grafana Dashboard (optional - enable with profile)
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: pmrs-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      prometheus:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - pmrs-network
+    profiles:
+      - monitoring
 
 # =============================================================================
 # Networks
@@ -190,4 +242,8 @@ volumes:
   nginx_logs:
     driver: local
   backend_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
     driver: local

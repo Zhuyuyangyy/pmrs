@@ -35,8 +35,9 @@ class PathEncoder(nn.Module):
         )
         
         # Get feature dimension (ResNet50 = 2048)
-        self.d_backbone = 2048
-        
+        d_backbone = 2048
+        self.d_backbone = d_backbone
+
         # Attention pooling for multiple tile aggregation
         self.attention_pool = AttentionPooling(d_backbone, d_model)
         

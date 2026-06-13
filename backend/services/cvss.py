@@ -60,7 +60,7 @@ class CVSSCalculator:
     ) -> str:
         """构建CVSS向量字符串"""
         if self.version == "3.1":
-            return f"CVSS:3.1/AV:{attack_vector}/AC:{attack_complexity}/PR:{privilegesrequired}/UI:{user_interaction}/S:{scope}/C:{confidentiality}/I:{integrity}/A:{availability}"
+            return f"CVSS:3.1/AV:{attack_vector}/AC:{attack_complexity}/PR:{privileges_required}/UI:{user_interaction}/S:{scope}/C:{confidentiality}/I:{integrity}/A:{availability}"
         else:
             return f"CVSS:3.0/AV:{attack_vector}/AC:{attack_complexity}/AU:{privileges_required}/C:{confidentiality}/I:{integrity}/A:{availability}"
 
@@ -178,21 +178,28 @@ class CVSSCalculator:
         self,
         crash_type: str,
         crash_signal: Optional[str] = None,
-        has_可控 = True,
-        requires_auth = False,
-        network_access = True,
+        controllable_input: bool = True,
+        requires_auth: bool = False,
+        network_access: bool = True,
     ) -> Tuple[float, str, Dict[str, str]]:
-        """从崩溃信息自动估算CVSS分数"""
-        
+        """从崩溃信息自动估算CVSS分数
+
+        Args:
+            crash_type: 崩溃类型 (sigsegv, sigabrt, timeout, etc.)
+            crash_signal: 崩溃信号
+            controllable_input: 输入是否可控
+            requires_auth: 是否需要认证
+            network_access: 是否需要网络访问
+        """
         # Attack Vector
         av = "N" if network_access else "L"
-        
+
         # Attack Complexity
         ac = "L"  # 默认低复杂度
-        
+
         # Privileges Required
         if requires_auth:
-            pr = "H" if not has_可控 else "L"
+            pr = "H" if not controllable_input else "L"
         else:
             pr = "N"
         

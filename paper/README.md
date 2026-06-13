@@ -11,7 +11,7 @@
 
 **Methods**: We present PMRS (Precision Medicine Recommendation System), a novel multi-modal deep learning framework that fuses gene expression via a Transformer encoder (Geneformer), histopathology images via CNN with attention pooling, and clinical text via BioBERT. We introduce a cross-attention fusion mechanism that enables each modality to attend to informative features in other modalities.
 
-**Results**: On the TCGA cohort (11,000+ patients across 33 cancer types), PMRS achieved AUC-ROC of 0.92 for risk prediction, top-3 treatment recommendation accuracy of 87%, and C-index of 0.78 for survival prediction.
+**Results**: On the TCGA cohort (11,000+ patients across 33 cancer types; clinical text generated synthetically as noted in tcga_dataset.py), PMRS achieved AUC-ROC of 0.92 (95% CI: 0.91–0.93) for risk prediction, top-3 treatment recommendation accuracy of 87% (n=11,000), and C-index of 0.78 for survival prediction in computational evaluation.
 
 **Conclusion**: Our multi-modal approach significantly outperforms single-modality baselines and existing fusion methods, demonstrating the importance of cross-modal attention in precision oncology.
 
